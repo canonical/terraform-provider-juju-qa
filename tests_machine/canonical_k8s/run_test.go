@@ -27,4 +27,5 @@ func TestQA_CanonicalK8S(t *testing.T) {
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
 	utils.JujuWaitFor(t, "k8s")
+	utils.JujuWaitFor(t, "k8s-worker")
 }

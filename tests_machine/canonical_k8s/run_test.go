@@ -12,7 +12,7 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	info := utils.GetMainControllerInfo(t)
 
 	tfOpts := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: ".",
+		TerraformDir: "./provision",
 		EnvVars:      info.Env(),
 		Reconfigure:  true,
 		NoColor:      true,

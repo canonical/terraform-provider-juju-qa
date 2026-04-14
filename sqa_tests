@@ -33,10 +33,10 @@ juju add-credential --client --file ./creds.yaml maas-cloud
 trap "rm -f ./creds.yaml" EXIT
 
 juju bootstrap --credential maas-creds maas-cloud $TF_JUJU_QA_CTRL --constraints "tags=juju,$CLUSTER_TAG"
-trap "juju destroy-controller --no-prompt --destroy-all-models $TF_JUJU_QA_CTRL" EXIT
+trap "juju kill-controller --no-prompt --destroy-all-models $TF_JUJU_QA_CTRL" EXIT
 
 juju bootstrap --credential maas-creds maas-cloud $TF_JUJU_QA_OFFERING_CTRL --constraints "tags=juju_upgrade,$CLUSTER_TAG"
-trap "juju destroy-controller --no-prompt --destroy-all-models $TF_JUJU_QA_OFFERING_CTRL" EXIT
+trap "juju kill-controller --no-prompt --destroy-all-models $TF_JUJU_QA_OFFERING_CTRL" EXIT
 
 # Actually run machine tests
 # Tag name is just for picking machines, doesn't actually have vault running

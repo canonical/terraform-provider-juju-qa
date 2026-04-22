@@ -7,6 +7,8 @@ CLUSTER_TAG="sqa-$CLUSTER"
 
 sudo snap install go --classic
 sudo snap install terraform --classic
+sudo snap install yq --classic
+sudo snap install kubectl --classic
 go install github.com/tebeka/go2xunit@v1.4.10
 
 # MAAS credentials

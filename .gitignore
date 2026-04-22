@@ -27,3 +27,4 @@ __debug_bin*
 test.env
 test_results.xml
 test_results.raw
+kubeconfig

@@ -42,7 +42,7 @@ resource "juju_application" "k8s" {
     cidrs = "0.0.0.0/0"
   }
 
-  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=4 mem=4096M"
+  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=2 mem=2G"
   units             = 1
 }
 
@@ -61,7 +61,7 @@ resource "juju_application" "k8s-worker" {
     cidrs = "0.0.0.0/0"
   }
 
-  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=4 mem=8192M"
+  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=2 mem=4G"
   units             = 2
 }
 

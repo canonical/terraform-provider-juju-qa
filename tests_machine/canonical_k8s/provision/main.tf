@@ -47,7 +47,6 @@ resource "juju_application" "k8s" {
   units             = 1
 }
 
-
 resource "juju_application" "k8s-worker" {
   name  = "k8s-worker"
   model_uuid = juju_model.this.uuid
@@ -78,7 +77,6 @@ resource "juju_integration" "k8s-worker-cluster" {
     endpoint = "cluster"
   }
 }
-
 
 resource "juju_integration" "k8s-worker-containerd" {
   model_uuid = resource.juju_model.this.uuid

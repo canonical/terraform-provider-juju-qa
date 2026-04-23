@@ -12,7 +12,7 @@ provider "juju" {
 
 module "model" {
   topic = "canonical-k8s-workload"
-  source = "../../modules/model_random"
+  source = "../../../modules/model_random"
 }
 
 output "model_name" {
@@ -25,11 +25,11 @@ resource "juju_model" "this" {
 
 resource "juju_application" "this" {
   model_uuid = juju_model.this.uuid
-  name       = "test"
+  name       = "postgres"
   charm {
-    name    = "juju-qa-test"
+    name    = "postgresql-k8s"
+    channel = "14/stable"
   }
 
-  config = {}
   constraints = "arch=${var.arch}"
 }

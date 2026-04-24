@@ -33,11 +33,6 @@ resource "juju_application" "k8s" {
     base     = "ubuntu@24.04"
   }
 
-  config = {
-    "dns-enabled" = true
-    "dns-cluster-domain" = "cluster.local"
-  }
-
   expose {
     cidrs = "0.0.0.0/0"
   }

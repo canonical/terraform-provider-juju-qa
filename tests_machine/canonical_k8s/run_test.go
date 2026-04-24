@@ -60,5 +60,6 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	modelName = terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "workload")
+	utils.JujuWaitFor(t, "source")
+	utils.JujuWaitFor(t, "sink")
 }

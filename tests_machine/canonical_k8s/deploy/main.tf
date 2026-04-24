@@ -29,16 +29,42 @@ resource "juju_model" "this" {
   credential = var.credential
 }
 
-resource "juju_application" "this" {
+resource "juju_application" "source" {
   model_uuid = juju_model.this.uuid
-  name       = "workload"
+  name       = "source"
 
   charm {
-    name     = "coredns"
-	  revision = 191
+    name     = "juju-qa-dummy-source"
   }
 
-  trust = true
+  config = {
+    token = "abc"
+  }
 
   constraints = "arch=${var.arch}"
+}
+
+resource "juju_application" "sink" {
+  model_uuid = juju_model.this.uuid
+  name       = "sink"
+
+  charm {
+    name     = "juju-qa-dummy-sink"
+  }
+
+  constraints = "arch=${var.arch}"
+}
+
+resource "juju_integration" "source-sink" {
+  model_uuid = resource.juju_model.this.uuid
+
+  application {
+    name = juju_application.source.name
+    endpoint = "sink"
+  }
+
+  application {
+    name     = juju_application.sink.name
+    endpoint = "source"
+  }
 }

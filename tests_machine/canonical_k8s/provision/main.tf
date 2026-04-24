@@ -36,14 +36,13 @@ resource "juju_application" "k8s" {
   config = {
     "dns-enabled" = true
     "dns-cluster-domain" = "cluster.local"
-    "local-storage-enabled" = true
   }
 
   expose {
     cidrs = "0.0.0.0/0"
   }
 
-  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=4 mem=4G root-disk=64G"
+  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=4 mem=4G"
   units             = 1
 }
 
@@ -61,7 +60,7 @@ resource "juju_application" "k8s-worker" {
     cidrs = "0.0.0.0/0"
   }
 
-  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=2 mem=2G root-disk=64G"
+  constraints       = "arch=${var.arch} tags=${var.tags} virt-type=virtual-machine cores=2 mem=2G"
   units             = 2
 }
 

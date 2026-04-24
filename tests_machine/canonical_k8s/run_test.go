@@ -47,7 +47,8 @@ func TestQA_CanonicalK8S(t *testing.T) {
 		Reconfigure:  true,
 		NoColor:      true,
 		Vars: map[string]any{
-			"cloud": "tfqa-k8s",
+			"cloud":      "tfqa-k8s",
+			"credential": "tfqa-k8s",
 		},
 	})
 

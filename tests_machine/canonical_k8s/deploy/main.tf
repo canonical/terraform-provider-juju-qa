@@ -26,7 +26,7 @@ resource "juju_model" "this" {
     name = var.cloud
   }
   
-  credential = "tfqa-k8s"
+  credential = var.credential
 }
 
 resource "juju_application" "this" {

@@ -9,3 +9,9 @@ variable "cloud" {
     description = "Cloud to deploy to"
     default     = "tfqa-k8s"
 }
+
+variable "credential" {
+    type        = string
+    description = "Credential for the cloud"
+    default     = "tfqa-k8s"
+}

@@ -31,10 +31,11 @@ resource "juju_model" "this" {
 
 resource "juju_application" "this" {
   model_uuid = juju_model.this.uuid
-  name       = "postgres"
+  name       = "workload"
+
   charm {
-    name    = "postgresql-k8s"
-    channel = "14/stable"
+    name     = "coredns"
+	  revision = 191
   }
 
   trust = true

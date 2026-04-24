@@ -21,6 +21,10 @@ output "model_name" {
 
 resource "juju_model" "this" {
   name = module.model.name
+
+  cloud {
+    name = var.cloud
+  }
 }
 
 resource "juju_application" "this" {
@@ -30,6 +34,8 @@ resource "juju_application" "this" {
     name    = "postgresql-k8s"
     channel = "14/stable"
   }
+
+  trust = true
 
   constraints = "arch=${var.arch}"
 }

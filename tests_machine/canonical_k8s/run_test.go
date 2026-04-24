@@ -34,20 +34,21 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	// *** deploy on k8s cluster
 	// arrange
 	cmd := exec.Command(
-		"bash", "-e", "-x", "-c", "./setup-controller.sh",
+		"bash", "-e", "-x", "-c", "./setup-cloud.sh",
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("failed to set up k8s cloud: %s", out)
 	}
 
-	info = utils.GetControllerInfo(t, "tfqa-k8s")
-
 	tfOpts = terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./deploy",
 		EnvVars:      info.Env(),
 		Reconfigure:  true,
 		NoColor:      true,
+		Vars: map[string]any{
+			"cloud": "tfqa-k8s",
+		},
 	})
 
 	// act

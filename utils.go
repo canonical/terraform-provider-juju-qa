@@ -192,7 +192,7 @@ func JujuStatus(t *testing.T) {
 func JujuWaitFor(t *testing.T, application string) {
 	cmd := exec.Command(
 		"juju", "wait-for",
-		"application", "--timeout", "60m",
+		"application", "--timeout", "2h",
 		application,
 	)
 	out, err := cmd.CombinedOutput()

@@ -187,7 +187,7 @@ func JujuStatus(t *testing.T) {
 	}
 }
 
-// JujuWaitFor wraps `juju wait-for application <app> --timeout 60m`
+// JujuWaitFor wraps `juju wait-for application <app> --timeout 2h`
 // and will log `juju status` on failure
 func JujuWaitFor(t *testing.T, application string) {
 	cmd := exec.Command(

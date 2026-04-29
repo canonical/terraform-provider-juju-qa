@@ -52,3 +52,12 @@ In practice, all TF plans have this constraint on all resources where it can be 
 ```
     constraints = "arch=${var.arch} tags=${var.tags}"
 ```
+
+# Debugging
+
+You can choose in the `Which step to sleep after` dropdown the `Run SQA tests` tests.
+Once that test runs, the logs will contain an IP you can SSH into as the `ubuntu` user,
+as long as you have the VPN on.
+
+You can run `gtr` in that shell to be taken to working directory of the tests. Inside that,
+`tests/sqa_tests_repo` will be the repository you pointed the pipeline to.

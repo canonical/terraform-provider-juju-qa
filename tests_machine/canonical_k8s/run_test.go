@@ -13,8 +13,6 @@ import (
 	utils "github.com/juju/terraform-provider-juju-qa"
 )
 
-const kubeConfigPath = "./kubeconfig"
-
 func TestQA_CanonicalK8S(t *testing.T) {
 	// *** provision k8s cluster
 	// arrange
@@ -40,7 +38,8 @@ func TestQA_CanonicalK8S(t *testing.T) {
 
 	// *** deploy on k8s cluster
 	// arrange
-	addCloud(t, info.Name)
+	removeCloud := addCloud(t, info.Name)
+	defer removeCloud()
 
 	tfOpts = terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./deploy",
@@ -65,13 +64,20 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	utils.JujuWaitFor(t, "sink")
 }
 
-func addCloud(t *testing.T, controllerName string) {
+func addCloud(t *testing.T, controllerName string) func() {
 	config := getKubeconfig(t)
 	config = unnestKubeconfig(t, config)
 
-	if err := os.WriteFile(kubeConfigPath, config, 0600); err != nil {
+	f, err := os.CreateTemp("", "kubeconfig-*.yaml")
+	if err != nil {
+		t.Fatalf("failed to create temp kubeconfig file: %v", err)
+	}
+	kubeConfigPath := f.Name()
+	if _, err := f.Write(config); err != nil {
+		f.Close()
 		t.Fatalf("failed to write kubeconfig file: %v", err)
 	}
+	f.Close()
 
 	cmd := exec.Command(
 		"juju", "add-k8s",
@@ -84,6 +90,19 @@ func addCloud(t *testing.T, controllerName string) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("failed to add k8s cloud: %s", out)
+	}
+
+	return func() {
+		cmd := exec.Command(
+			"juju", "remove-cloud",
+			"tfqa-k8s",
+			"--client",
+			"--controller="+controllerName,
+		)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Logf("failed to remove k8s cloud: %s", out)
+		}
 	}
 }
 

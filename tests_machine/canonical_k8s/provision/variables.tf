@@ -15,3 +15,9 @@ variable "cloud" {
     description = "Cloud to deploy to"
     default     = ""
 }
+
+variable "extra-constraints" {
+    type        = string
+    description = "Extra constraints to add to all apps"
+    default     = ""
+}

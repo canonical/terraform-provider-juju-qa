@@ -22,7 +22,8 @@ clouds:
         endpoint: $api_url
 EOF
 juju add-cloud --client --file ./clouds.yaml
-trap "rm -f ./clouds.yaml" EXIT
+rm -f ./clouds.yaml
+trap "juju remove-cloud maas-cloud" EXIT
 
 cat > "./creds.yaml" << EOF
 credentials:
@@ -32,7 +33,8 @@ credentials:
             maas-oauth: $api_key
 EOF
 juju add-credential --client --file ./creds.yaml maas-cloud
-trap "rm -f ./creds.yaml" EXIT
+rm -f ./creds.yaml
+trap "juju remove-credential maas-cloud maas-creds" EXIT
 
 juju bootstrap --credential maas-creds maas-cloud $TF_JUJU_QA_CTRL --constraints "tags=juju,$CLUSTER_TAG"
 trap "juju kill-controller --no-prompt $TF_JUJU_QA_CTRL" EXIT

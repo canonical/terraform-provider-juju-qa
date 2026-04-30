@@ -37,6 +37,10 @@ resource "juju_application" "k8s" {
     cidrs = "0.0.0.0/0"
   }
 
+  config = {
+    "local-storage-enabled" = false
+  }
+
   constraints       = "arch=${var.arch} tags=${var.tags} cores=2 mem=4G ${var.extra-constraints}"
   units             = 1
 }

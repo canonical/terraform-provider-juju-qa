@@ -35,14 +35,22 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	utils.JujuSwitch(t, info.Name+":"+modelName)
 	utils.JujuWaitForApplication(t, "k8s")
 
+	cmd := exec.Command(
+		"juju", "status",
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed get juju status: %s", out)
+	}
+
 	// *** deploy on k8s cluster
 	// arrange
 	// removeCloud := addCloud(t, info.Name)
 	// defer removeCloud()
-	cmd := exec.Command(
+	cmd = exec.Command(
 		"bash", "-e", "-x", "-c", "./setup-cloud.sh",
 	)
-	out, err := cmd.CombinedOutput()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("failed to set up k8s cloud: %s", out)
 	}

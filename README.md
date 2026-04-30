@@ -29,6 +29,16 @@ make run=PrivateRegistry test
     - Like `{"repo": "canonical/terraform-provider-juju-qa", "ref": "main"}`
 - Click `Run workflow`.
 
+### Debugging
+
+You can choose in the `Which step to sleep after` dropdown the `Run SQA tests` tests.
+Once that test runs, the logs will contain an IP you can SSH into as the `ubuntu` user,
+as long as you have the VPN on.
+
+You can run `gtr` in that shell to be taken to working directory of the tests. Inside that,
+`tests/sqa_tests_repo` will be the repository you pointed the pipeline to.
+
+
 # Constraints
 
 ## Tags
@@ -53,11 +63,8 @@ In practice, all TF plans have this constraint on all resources where it can be 
     constraints = "arch=${var.arch} tags=${var.tags}"
 ```
 
-# Debugging
+## Canonical k8s on LXD
 
-You can choose in the `Which step to sleep after` dropdown the `Run SQA tests` tests.
-Once that test runs, the logs will contain an IP you can SSH into as the `ubuntu` user,
-as long as you have the VPN on.
+You have to add `virt-type=virtual-machine` to constraints for Canonical k8s to run on LXD.
 
-You can run `gtr` in that shell to be taken to working directory of the tests. Inside that,
-`tests/sqa_tests_repo` will be the repository you pointed the pipeline to.
+The Canonical k8s plan accepts the `extra-constraints` var, where you can add this.

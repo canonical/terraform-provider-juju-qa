@@ -33,7 +33,7 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	modelName := terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitForModel(t, modelName)
+	utils.JujuWaitForApplication(t, "k8s")
 
 	// *** deploy on k8s cluster
 	// arrange

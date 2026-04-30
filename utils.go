@@ -193,6 +193,7 @@ func JujuWaitForApplication(t *testing.T, application string) {
 	cmd := exec.Command(
 		"juju", "wait-for",
 		"application", application,
+		"--query=forEach(units, unit => unit.workload-status==\"active\")",
 		"--timeout", "2h",
 		"--summary",
 	)

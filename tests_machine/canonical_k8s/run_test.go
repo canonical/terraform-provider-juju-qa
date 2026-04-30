@@ -48,13 +48,6 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	// arrange
 	removeCloud := addCloud(t, info.Name)
 	defer removeCloud()
-	// cmd = exec.Command(
-	// 	"bash", "-e", "-x", "-c", "./setup-cloud.sh",
-	// )
-	// out, err = cmd.CombinedOutput()
-	// if err != nil {
-	// 	t.Fatalf("failed to set up k8s cloud: %s", out)
-	// }
 
 	tfOpts = terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./deploy",

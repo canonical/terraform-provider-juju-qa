@@ -187,13 +187,35 @@ func JujuStatus(t *testing.T) {
 	}
 }
 
-// JujuWaitFor wraps `juju wait-for application <app> --timeout 60m`
+// JujuWaitForApplication wraps `juju wait-for application <app> ...`
 // and will log `juju status` on failure
-func JujuWaitFor(t *testing.T, application string) {
+func JujuWaitForApplication(t *testing.T, application string) {
 	cmd := exec.Command(
 		"juju", "wait-for",
-		"application", "--timeout", "60m",
-		application,
+		"application", application,
+		"--query=forEach(units, unit => unit.workload-status==\"active\")",
+		"--timeout", "2h",
+		"--summary",
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		JujuStatus(t)
+
+		t.Logf("failed juju wait-for: %s", out)
+		t.Fail()
+	}
+}
+
+// JujuWaitForModel wraps `juju wait-for model <model> ...`
+// and will log `juju status` on failure
+func JujuWaitForModel(t *testing.T, model string) {
+	//juju wait-for model ${var.model_name} --query='forEach(units, unit => unit.workload-status==\"active\")' --timeout 60m --summary
+	cmd := exec.Command(
+		"juju", "wait-for",
+		"model", model,
+		"--query=forEach(units, unit => unit.workload-status==\"active\")",
+		"--timeout", "2h",
+		"--summary",
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

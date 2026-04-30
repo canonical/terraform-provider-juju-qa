@@ -7,6 +7,8 @@ CLUSTER_TAG="sqa-$CLUSTER"
 
 sudo snap install go --classic
 sudo snap install terraform --classic
+sudo snap install yq --classic
+sudo snap install kubectl --classic
 go install github.com/tebeka/go2xunit@v1.4.10
 
 # MAAS credentials
@@ -20,7 +22,8 @@ clouds:
         endpoint: $api_url
 EOF
 juju add-cloud --client --file ./clouds.yaml
-trap "rm -f ./clouds.yaml" EXIT
+rm -f ./clouds.yaml
+trap "juju remove-cloud maas-cloud" EXIT
 
 cat > "./creds.yaml" << EOF
 credentials:
@@ -30,16 +33,17 @@ credentials:
             maas-oauth: $api_key
 EOF
 juju add-credential --client --file ./creds.yaml maas-cloud
-trap "rm -f ./creds.yaml" EXIT
+rm -f ./creds.yaml
+trap "juju remove-credential maas-cloud maas-creds" EXIT
 
 juju bootstrap --credential maas-creds maas-cloud $TF_JUJU_QA_CTRL --constraints "tags=juju,$CLUSTER_TAG"
-trap "juju destroy-controller --no-prompt --destroy-all-models $TF_JUJU_QA_CTRL" EXIT
+trap "juju kill-controller --no-prompt $TF_JUJU_QA_CTRL" EXIT
 
 juju bootstrap --credential maas-creds maas-cloud $TF_JUJU_QA_OFFERING_CTRL --constraints "tags=juju_upgrade,$CLUSTER_TAG"
-trap "juju destroy-controller --no-prompt --destroy-all-models $TF_JUJU_QA_OFFERING_CTRL" EXIT
+trap "juju kill-controller --no-prompt $TF_JUJU_QA_OFFERING_CTRL" EXIT
 
 # Actually run machine tests
 # Tag name is just for picking machines, doesn't actually have vault running
-TF_VAR_tags="vault,$CLUSTER_TAG" TF_VAR_arch="amd64" go test -v -timeout=4h ./tests_machine/... |& tee test_results.raw
+TF_VAR_tags="vault,$CLUSTER_TAG" TF_VAR_cloud="maas-cloud" go test -v -timeout=8h ./tests_machine/... |& tee test_results.raw
 
 ~/go/bin/go2xunit -input test_results.raw -output test_results.xml

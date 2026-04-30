@@ -37,5 +37,5 @@ func TestQA_CrossController(t *testing.T) {
 	consumingModelName := terraform.Output(t, consumingTfOpts, "model_name")
 
 	utils.JujuSwitch(t, consumingInfo.Name+":"+consumingModelName)
-	utils.JujuWaitFor(t, "dummy-sink")
+	utils.JujuWaitForApplication(t, "dummy-sink")
 }

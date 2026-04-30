@@ -29,5 +29,5 @@ func TestQA_Temporal(t *testing.T) {
 	modelName := terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "temporal")
+	utils.JujuWaitForApplication(t, "temporal")
 }

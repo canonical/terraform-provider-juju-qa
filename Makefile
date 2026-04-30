@@ -9,5 +9,6 @@ test:
 clean:
 	find . -name "terraform.tfstate*" -delete
 	find . -name ".terraform.lock.hcl" -delete
+	find . -name "kubeconfig-*.yaml" -delete
 	find . -type d -name ".terraform" -exec rm -rf {} +
 	rm -f test_results.xml test_results.raw

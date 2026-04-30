@@ -28,5 +28,5 @@ func TestQA_StoragePool(t *testing.T) {
 	// assert
 	modelName := terraform.Output(t, tfOpts, "model_name")
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "db")
+	utils.JujuWaitForApplication(t, "db")
 }

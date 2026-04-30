@@ -26,5 +26,5 @@ func TestQA_Minimal(t *testing.T) {
 	modelName := terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "qa-test")
+	utils.JujuWaitForApplication(t, "qa-test")
 }

@@ -33,13 +33,19 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	modelName := terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "k8s")
-	utils.JujuWaitFor(t, "k8s-worker")
+	utils.JujuWaitForModel(t, modelName)
 
 	// *** deploy on k8s cluster
 	// arrange
-	removeCloud := addCloud(t, info.Name)
-	defer removeCloud()
+	// removeCloud := addCloud(t, info.Name)
+	// defer removeCloud()
+	cmd := exec.Command(
+		"bash", "-e", "-x", "-c", "./setup-cloud.sh",
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to set up k8s cloud: %s", out)
+	}
 
 	tfOpts = terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./deploy",
@@ -60,8 +66,8 @@ func TestQA_CanonicalK8S(t *testing.T) {
 	modelName = terraform.Output(t, tfOpts, "model_name")
 
 	utils.JujuSwitch(t, info.Name+":"+modelName)
-	utils.JujuWaitFor(t, "source")
-	utils.JujuWaitFor(t, "sink")
+	utils.JujuWaitForApplication(t, "source")
+	utils.JujuWaitForApplication(t, "sink")
 }
 
 func addCloud(t *testing.T, controllerName string) func() {

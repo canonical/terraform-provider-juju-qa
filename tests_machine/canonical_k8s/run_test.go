@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -45,15 +46,15 @@ func TestQA_CanonicalK8S(t *testing.T) {
 
 	// *** deploy on k8s cluster
 	// arrange
-	// removeCloud := addCloud(t, info.Name)
-	// defer removeCloud()
-	cmd = exec.Command(
-		"bash", "-e", "-x", "-c", "./setup-cloud.sh",
-	)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("failed to set up k8s cloud: %s", out)
-	}
+	removeCloud := addCloud(t, info.Name)
+	defer removeCloud()
+	// cmd = exec.Command(
+	// 	"bash", "-e", "-x", "-c", "./setup-cloud.sh",
+	// )
+	// out, err = cmd.CombinedOutput()
+	// if err != nil {
+	// 	t.Fatalf("failed to set up k8s cloud: %s", out)
+	// }
 
 	tfOpts = terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./deploy",
@@ -82,16 +83,21 @@ func addCloud(t *testing.T, controllerName string) func() {
 	config := getKubeconfig(t)
 	config = unnestKubeconfig(t, config)
 
-	f, err := os.CreateTemp("", "kubeconfig-*.yaml")
+	f, err := os.CreateTemp(".", "kubeconfig-*.yaml")
 	if err != nil {
 		t.Fatalf("failed to create temp kubeconfig file: %v", err)
 	}
-	kubeConfigPath := f.Name()
+	kubeConfigPath, err := filepath.Abs(f.Name())
+	if err != nil {
+		f.Close()
+		t.Fatalf("failed to resolve kubeconfig path: %v", err)
+	}
 	if _, err := f.Write(config); err != nil {
 		f.Close()
 		t.Fatalf("failed to write kubeconfig file: %v", err)
 	}
 	f.Close()
+	defer os.Remove(kubeConfigPath)
 
 	cmd := exec.Command(
 		"juju", "add-k8s",
@@ -144,7 +150,7 @@ func getKubeconfig(t *testing.T) []byte {
 }
 
 func unnestKubeconfig(t *testing.T, raw []byte) []byte {
-	var wrapper map[string]any
+	var wrapper map[string]string
 	if err := yaml.Unmarshal(raw, &wrapper); err != nil {
 		t.Fatalf("failed to parse kubeconfig yaml: %v", err)
 	}
@@ -154,10 +160,5 @@ func unnestKubeconfig(t *testing.T, raw []byte) []byte {
 		t.Fatal("kubeconfig key not found in yaml")
 	}
 
-	config, err := yaml.Marshal(inner)
-	if err != nil {
-		t.Fatalf("failed to serialise kubeconfig: %v", err)
-	}
-
-	return config
+	return []byte(inner)
 }

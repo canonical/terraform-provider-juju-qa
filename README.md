@@ -25,7 +25,8 @@ make run=PrivateRegistry test
 - Pick a cluster, ideally one that doesn't already have a workflow currently running.
 - Pick `solution`, since we're bootstrapping our own controllers.
     - `composite` bootstraps a controller for us, but doesn't allow for a second one.
-- Pass in parameters including the repo and branch you want to run.
+- Pass in `no_product` as the product, since we're not testing a deployed product.
+- Pass in SQA test injection parameters including the repo and branch you want to run.
     - Like `{"repo": "canonical/terraform-provider-juju-qa", "ref": "main"}`
 - Click `Run workflow`.
 

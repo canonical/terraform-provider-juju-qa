@@ -23,6 +23,7 @@ make run=PrivateRegistry test
 - Go to [SolQA TOR3 MAAS workflows](https://github.com/canonical/terragrunt-deployment-pipelines/actions/workflows/maas_physical.yaml)
 - Click `Run workflow`.
 - Pick a cluster, ideally one that doesn't already have a workflow currently running.
+    - Also check that the cluster isn't used in another pipeline, [locks are issues in this repo](https://github.com/canonical/workflow-coordinator/issues)
 - Pick `solution`, since we're bootstrapping our own controllers.
     - `composite` bootstraps a controller for us, but doesn't allow for a second one.
 - Pass in `no_product` as the product, since we're not testing a deployed product.

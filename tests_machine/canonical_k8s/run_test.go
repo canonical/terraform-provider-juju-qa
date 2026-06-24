@@ -14,6 +14,12 @@ import (
 	utils "github.com/juju/terraform-provider-juju-qa"
 )
 
+type jujuActionResult struct {
+	Results struct {
+		Kubeconfig string `json:"kubeconfig"`
+	} `json:"results"`
+}
+
 func TestQA_CanonicalK8S(t *testing.T) {
 	// *** provision k8s cluster
 	// arrange
@@ -161,45 +167,21 @@ func extractKubeconfig(raw []byte) []byte {
 }
 
 func extractKubeconfigFromJSON(raw []byte) []byte {
-	var data any
-	if err := json.Unmarshal(raw, &data); err != nil {
+	var direct jujuActionResult
+	if err := json.Unmarshal(raw, &direct); err == nil && direct.Results.Kubeconfig != "" {
+		return []byte(direct.Results.Kubeconfig)
+	}
+
+	var wrapped map[string]jujuActionResult
+	if err := json.Unmarshal(raw, &wrapped); err != nil {
 		return nil
 	}
 
-	if kubeconfig, ok := findKubeconfigValue(data); ok {
-		return []byte(kubeconfig)
+	for _, result := range wrapped {
+		if result.Results.Kubeconfig != "" {
+			return []byte(result.Results.Kubeconfig)
+		}
 	}
 
 	return nil
-}
-
-func findKubeconfigValue(value any) (string, bool) {
-	switch v := value.(type) {
-	case map[string]any:
-		for key, nested := range v {
-			if key == "kubeconfig" {
-				if s, ok := nested.(string); ok {
-					return s, true
-				}
-			}
-			if s, ok := findKubeconfigValue(nested); ok {
-				return s, true
-			}
-		}
-	case []any:
-		for _, nested := range v {
-			if s, ok := findKubeconfigValue(nested); ok {
-				return s, true
-			}
-		}
-	case string:
-		var wrapper map[string]string
-		if err := yaml.Unmarshal([]byte(v), &wrapper); err == nil {
-			if inner, ok := wrapper["kubeconfig"]; ok {
-				return inner, true
-			}
-		}
-	}
-
-	return "", false
 }

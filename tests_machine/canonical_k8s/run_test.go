@@ -2,11 +2,11 @@ package qa
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -74,7 +74,10 @@ func TestQA_CanonicalK8S(t *testing.T) {
 
 func addCloud(t *testing.T, controllerName string) func() {
 	config := getKubeconfig(t)
-	config = unnestKubeconfig(t, config)
+	inner := extractKubeconfig(config)
+	if len(inner) == 0 {
+		t.Fatalf("kubeconfig key not found in output: %s", string(config))
+	}
 
 	f, err := os.CreateTemp(".", "kubeconfig-*.yaml")
 	if err != nil {
@@ -85,7 +88,7 @@ func addCloud(t *testing.T, controllerName string) func() {
 		f.Close()
 		t.Fatalf("failed to resolve kubeconfig path: %v", err)
 	}
-	if _, err := f.Write(config); err != nil {
+	if _, err := f.Write(inner); err != nil {
 		f.Close()
 		t.Fatalf("failed to write kubeconfig file: %v", err)
 	}
@@ -120,38 +123,83 @@ func addCloud(t *testing.T, controllerName string) func() {
 }
 
 func getKubeconfig(t *testing.T) []byte {
-	for range 5 {
-		cmd := exec.Command(
-			"juju", "run",
-			"k8s/0", "get-kubeconfig",
-		)
-		var stdout, stderr bytes.Buffer
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
+	cmd := exec.Command(
+		"juju", "run",
+		"--wait=5m",
+		"--format=json",
+		"k8s/0", "get-kubeconfig",
+	)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
-		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to get kubeconfig: %s", stderr.String())
-		}
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to get kubeconfig: %s", stderr.String())
+	}
 
-		if stdout.Len() > 0 {
-			return stdout.Bytes()
+	if config := extractKubeconfigFromJSON(stdout.Bytes()); len(config) > 0 {
+		return config
+	}
+
+	t.Fatalf("kubeconfig not found in juju run output: %s", stdout.String())
+	return nil
+}
+
+func extractKubeconfig(raw []byte) []byte {
+	if config := extractKubeconfigFromJSON(raw); len(config) > 0 {
+		return config
+	}
+
+	var wrapper map[string]string
+	if err := yaml.Unmarshal(raw, &wrapper); err == nil {
+		if inner, ok := wrapper["kubeconfig"]; ok {
+			return []byte(inner)
 		}
-		time.Sleep(10 * time.Second)
 	}
 
 	return nil
 }
 
-func unnestKubeconfig(t *testing.T, raw []byte) []byte {
-	var wrapper map[string]string
-	if err := yaml.Unmarshal(raw, &wrapper); err != nil {
-		t.Fatalf("failed to parse kubeconfig yaml: %v", err)
+func extractKubeconfigFromJSON(raw []byte) []byte {
+	var data any
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return nil
 	}
 
-	inner, ok := wrapper["kubeconfig"]
-	if !ok {
-		t.Fatal("kubeconfig key not found in yaml")
+	if kubeconfig, ok := findKubeconfigValue(data); ok {
+		return []byte(kubeconfig)
 	}
 
-	return []byte(inner)
+	return nil
+}
+
+func findKubeconfigValue(value any) (string, bool) {
+	switch v := value.(type) {
+	case map[string]any:
+		for key, nested := range v {
+			if key == "kubeconfig" {
+				if s, ok := nested.(string); ok {
+					return s, true
+				}
+			}
+			if s, ok := findKubeconfigValue(nested); ok {
+				return s, true
+			}
+		}
+	case []any:
+		for _, nested := range v {
+			if s, ok := findKubeconfigValue(nested); ok {
+				return s, true
+			}
+		}
+	case string:
+		var wrapper map[string]string
+		if err := yaml.Unmarshal([]byte(v), &wrapper); err == nil {
+			if inner, ok := wrapper["kubeconfig"]; ok {
+				return inner, true
+			}
+		}
+	}
+
+	return "", false
 }

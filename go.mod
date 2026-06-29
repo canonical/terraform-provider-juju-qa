@@ -1,6 +1,6 @@
 module github.com/juju/terraform-provider-juju-qa
 
-go 1.25.4
+go 1.25
 
 require (
 	github.com/gruntwork-io/terratest v0.54.0

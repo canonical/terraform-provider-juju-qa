@@ -10,8 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	utils "github.com/juju/terraform-provider-juju-qa"
 )
@@ -90,10 +88,6 @@ func TestQA_CanonicalK8S(t *testing.T) {
 
 func addCloud(t *testing.T, controllerName string) func() {
 	config := getKubeconfig(t)
-	inner := extractKubeconfig(config)
-	if len(inner) == 0 {
-		t.Fatalf("kubeconfig key not found in output: %s", string(config))
-	}
 
 	f, err := os.CreateTemp(".", "kubeconfig-*.yaml")
 	if err != nil {
@@ -106,7 +100,7 @@ func addCloud(t *testing.T, controllerName string) func() {
 		}
 		t.Fatalf("failed to resolve kubeconfig path: %v", err)
 	}
-	if _, err := f.Write(inner); err != nil {
+	if _, err := f.Write(config); err != nil {
 		if closeErr := f.Close(); closeErr != nil {
 			t.Logf("failed to close temp kubeconfig file: %v", closeErr)
 		}
@@ -173,21 +167,17 @@ func getKubeconfig(t *testing.T) []byte {
 			lastStdout = stdout.String()
 			lastStderr = stderr.String()
 
-			if result, ok := extractActionResult(stdout.Bytes()); ok {
-				switch {
-				case result.Status == "failed":
-					lastErr = fmt.Errorf("juju action failed: %s", result.Message)
-				case result.Results.ReturnCode != 0:
-					lastErr = fmt.Errorf("juju action returned non-zero return-code %d: %s", result.Results.ReturnCode, result.Message)
-				case result.Results.Kubeconfig != "":
-					return []byte(result.Results.Kubeconfig)
-				default:
-					lastErr = fmt.Errorf("juju action succeeded but kubeconfig was empty")
-				}
-			} else if config := extractKubeconfigFromJSON(stdout.Bytes()); len(config) > 0 {
-				return config
+			result, ok := extractActionResult(stdout.Bytes())
+			if !ok {
+				lastErr = fmt.Errorf("unexpected juju run output")
+			} else if result.Status != "completed" {
+				lastErr = fmt.Errorf("juju action did not complete successfully: %s", result.Message)
+			} else if result.Results.ReturnCode != 0 {
+				lastErr = fmt.Errorf("juju action returned non-zero return-code %d: %s", result.Results.ReturnCode, result.Message)
+			} else if result.Results.Kubeconfig == "" {
+				lastErr = fmt.Errorf("juju action succeeded but kubeconfig was empty")
 			} else {
-				lastErr = fmt.Errorf("kubeconfig not found in juju run output")
+				return []byte(result.Results.Kubeconfig)
 			}
 		}
 
@@ -213,37 +203,8 @@ func getKubeconfig(t *testing.T) []byte {
 	return nil
 }
 
-func extractKubeconfig(raw []byte) []byte {
-	if config := extractKubeconfigFromJSON(raw); len(config) > 0 {
-		return config
-	}
-
-	var wrapper map[string]string
-	if err := yaml.Unmarshal(raw, &wrapper); err == nil {
-		if inner, ok := wrapper["kubeconfig"]; ok {
-			return []byte(inner)
-		}
-	}
-
-	return nil
-}
-
-func extractKubeconfigFromJSON(raw []byte) []byte {
-	if result, ok := extractActionResult(raw); ok && result.Results.Kubeconfig != "" {
-		return []byte(result.Results.Kubeconfig)
-	}
-
-	return nil
-}
-
 func extractActionResult(raw []byte) (jujuActionResult, bool) {
-	var direct jujuActionResult
-	if err := json.Unmarshal(raw, &direct); err == nil {
-		if direct.Status != "" || direct.Message != "" || direct.Results.Kubeconfig != "" || direct.Results.ReturnCode != 0 {
-			return direct, true
-		}
-	}
-
+	// Map of unit ID to action result
 	var wrapped map[string]jujuActionResult
 	if err := json.Unmarshal(raw, &wrapped); err != nil {
 		return jujuActionResult{}, false

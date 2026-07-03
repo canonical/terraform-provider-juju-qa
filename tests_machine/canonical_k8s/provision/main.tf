@@ -38,7 +38,7 @@ resource "juju_application" "k8s" {
   }
 
   config = {
-    "local-storage-enabled" = false
+    "local-storage-enabled" = true
   }
 
   constraints       = "arch=${var.arch} tags=${var.tags} cores=2 mem=4G ${var.extra-constraints}"
